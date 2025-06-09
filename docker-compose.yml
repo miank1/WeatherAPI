@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:7
+    container_name: weather-redis
+    ports:
+      - "6379:6379"
+
+  app:
+    build: .
+    container_name: weather-api
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    depends_on:
+      - redis

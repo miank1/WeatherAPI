@@ -4,6 +4,10 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
+	"weather-api/cache"
+	"weather-api/handlers"
+	"weather-api/weather"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -30,11 +34,12 @@ func main() {
 	// Initializing the router
 	router := gin.Default()
 
-	router.GET("/ping", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "pong",
-		})
-	})
+	weatherService := weather.NewOpenWeatherClient(apiKey)
+	redisAddr := os.Getenv("REDIS_ADDR")
+	redisPwd := os.Getenv("REDIS_PASSWORD")
+	cache := cache.NewRedisCache(redisAddr, redisPwd, 10*time.Minute)
+	handler := handlers.NewWeatherHandler(weatherService, *cache)
+	router.GET("/weather", handler.GetWeatherByCity)
 
 	fmt.Println("Server running on port")
 	err = router.Run(":" + port)
